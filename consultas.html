@@ -1,0 +1,414 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Consultas - Maternis</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+body {
+    background: #F8F4FF;
+    font-family: 'Poppins', sans-serif;
+}
+
+.topo {
+    background: linear-gradient(135deg, #F78FB3, #D980FA);
+    color: white;
+    padding: 25px;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+    text-align: center;
+}
+
+.card {
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.08);
+}
+
+.btn-salvar {
+    background: #D980FA;
+    color: white;
+}
+
+.btn-salvar:hover {
+    background: #c15df2;
+    color: white;
+}
+
+.btn-notificacao {
+    background: #F78FB3;
+    color: white;
+}
+
+.btn-notificacao:hover {
+    background: #ed719d;
+    color: white;
+}
+
+.consulta {
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+    margin-top: 15px;
+    box-shadow: 0 3px 10px rgba(0,0,0,.06);
+}
+
+.consulta-hoje {
+    border-left: 5px solid #D980FA;
+}
+
+.aviso-hoje {
+    background: #f3e4ff;
+    color: #7735a0;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topo">
+    <h3>📅 Minhas Consultas</h3>
+    <p class="mb-0">Organize seus compromissos com o Maternis</p>
+</div>
+
+<div class="container mt-4 mb-5">
+
+    <div class="card p-4">
+
+        <h5 class="mb-3">Cadastrar consulta</h5>
+
+        <div class="mb-3">
+            <label for="medico" class="form-label">Médico</label>
+            <input type="text" class="form-control" id="medico"
+                   placeholder="Nome do médico">
+        </div>
+
+        <div class="mb-3">
+            <label for="data" class="form-label">Data</label>
+            <input type="date" class="form-control" id="data">
+        </div>
+
+        <div class="mb-3">
+            <label for="hora" class="form-label">Horário</label>
+            <input type="time" class="form-control" id="hora">
+        </div>
+
+        <button class="btn btn-salvar w-100"
+                onclick="salvarConsulta()">
+            <i class="bi bi-calendar-plus"></i>
+            Salvar Consulta
+        </button>
+
+        <hr>
+
+        <button class="btn btn-notificacao w-100"
+                onclick="ativarNotificacoes()">
+            <i class="bi bi-bell"></i>
+            Ativar notificações
+        </button>
+
+        <small class="text-muted mt-2 text-center">
+            Receba avisos sobre as consultas agendadas para hoje.
+        </small>
+
+        <div id="statusNotificacao" class="mt-3 text-center"
+             role="status" aria-live="polite"></div>
+    </div>
+
+    <div id="avisoConsultas"></div>
+
+    <h5 class="mt-4">Minhas consultas cadastradas</h5>
+
+    <div id="lista"></div>
+
+</div>
+
+<script>
+let consultas = JSON.parse(
+    localStorage.getItem("consultas") || "[]"
+);
+
+let notificadas = JSON.parse(
+    localStorage.getItem("consultasNotificadas") || "[]"
+);
+
+// Gera identificadores para consultas antigas que não possuem ID.
+consultas.forEach(consulta => {
+    if (!consulta.id) {
+        consulta.id = criarId();
+    }
+});
+
+salvarNoNavegador();
+
+function criarId() {
+    if (window.crypto && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+
+    return Date.now().toString(36) +
+        Math.random().toString(36).slice(2);
+}
+
+function salvarNoNavegador() {
+    localStorage.setItem("consultas", JSON.stringify(consultas));
+    localStorage.setItem(
+        "consultasNotificadas",
+        JSON.stringify(notificadas)
+    );
+}
+
+// Retorna a data local no formato AAAA-MM-DD.
+function dataDeHoje() {
+    const agora = new Date();
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, "0");
+    const dia = String(agora.getDate()).padStart(2, "0");
+
+    return `${ano}-${mes}-${dia}`;
+}
+
+function formatarData(data) {
+    if (!data) return "";
+
+    const [ano, mes, dia] = data.split("-");
+    return `${dia}/${mes}/${ano}`;
+}
+
+function escaparHTML(valor) {
+    return String(valor).replace(/[&<>"']/g, caractere => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[caractere]);
+}
+
+function salvarConsulta() {
+    const medico = document.getElementById("medico").value.trim();
+    const data = document.getElementById("data").value;
+    const hora = document.getElementById("hora").value;
+
+    if (!medico || !data || !hora) {
+        alert("Preencha todos os campos.");
+        return;
+    }
+
+    if (data < dataDeHoje()) {
+        alert("Escolha a data de hoje ou uma data futura.");
+        return;
+    }
+
+    consultas.push({
+        id: criarId(),
+        medico,
+        data,
+        hora
+    });
+
+    salvarNoNavegador();
+
+    document.getElementById("medico").value = "";
+    document.getElementById("data").value = "";
+    document.getElementById("hora").value = "";
+
+    mostrarConsultas();
+    verificarConsultasDeHoje();
+
+    alert("Consulta salva com sucesso!");
+}
+
+function mostrarConsultas() {
+    const lista = document.getElementById("lista");
+    const aviso = document.getElementById("avisoConsultas");
+    const hoje = dataDeHoje();
+
+    lista.innerHTML = "";
+    aviso.innerHTML = "";
+
+    if (consultas.length === 0) {
+        lista.innerHTML =
+            '<p class="text-center text-muted mt-3">' +
+            'Nenhuma consulta cadastrada.</p>';
+        return;
+    }
+
+    const ordenadas = consultas
+        .map((consulta, indice) => ({ consulta, indice }))
+        .sort((a, b) =>
+            (a.consulta.data + a.consulta.hora)
+                .localeCompare(b.consulta.data + b.consulta.hora)
+        );
+
+    const consultasHoje = consultas.filter(c => c.data === hoje);
+
+    if (consultasHoje.length > 0) {
+        aviso.innerHTML = `
+            <div class="aviso-hoje mt-4">
+                <h5><i class="bi bi-bell-fill"></i> Consultas para hoje</h5>
+                <p class="mb-0">
+                    Você tem ${consultasHoje.length}
+                    consulta(s) agendada(s) para hoje.
+                </p>
+            </div>
+        `;
+    }
+
+    ordenadas.forEach(({ consulta: c, indice }) => {
+        const elemento = document.createElement("div");
+
+        elemento.className = "consulta" +
+            (c.data === hoje ? " consulta-hoje" : "");
+
+        elemento.innerHTML = `
+            <h5>👩‍⚕️ ${escaparHTML(c.medico)}</h5>
+
+            <p>
+                <b>📅 Data:</b> ${formatarData(c.data)}<br>
+                <b>🕒 Horário:</b> ${escaparHTML(c.hora)}
+                ${c.data === hoje
+                    ? '<br><span class="text-success fw-bold">' +
+                      'Consulta marcada para hoje!</span>'
+                    : ""}
+            </p>
+
+            <button class="btn btn-danger btn-sm"
+                    onclick="excluirConsulta(${indice})">
+                <i class="bi bi-trash"></i> Excluir
+            </button>
+        `;
+
+        lista.appendChild(elemento);
+    });
+}
+
+function excluirConsulta(indice) {
+    if (!confirm("Deseja excluir esta consulta?")) {
+        return;
+    }
+
+    const consulta = consultas[indice];
+
+    // Remove também o registro da notificação dessa consulta.
+    notificadas = notificadas.filter(
+        item => item.id !== consulta.id
+    );
+
+    consultas.splice(indice, 1);
+
+    salvarNoNavegador();
+    mostrarConsultas();
+}
+
+async function ativarNotificacoes() {
+    const status = document.getElementById("statusNotificacao");
+
+    if (!("Notification" in window)) {
+        status.textContent =
+            "Seu navegador não oferece suporte a notificações.";
+        return;
+    }
+
+    if (Notification.permission === "denied") {
+        status.textContent =
+            "As notificações estão bloqueadas nas configurações do navegador.";
+        return;
+    }
+
+    try {
+        const permissao = await Notification.requestPermission();
+
+        if (permissao === "granted") {
+            status.textContent =
+                "Notificações ativadas! Vamos verificar as consultas de hoje.";
+            verificarConsultasDeHoje();
+        } else {
+            status.textContent =
+                "Permissão não concedida. Ative as notificações no navegador.";
+        }
+    } catch (erro) {
+        status.textContent =
+            "Não foi possível ativar as notificações neste navegador.";
+    }
+}
+
+function verificarConsultasDeHoje() {
+    const hoje = dataDeHoje();
+
+    // A notificação do navegador só é exibida com permissão.
+    if (!("Notification" in window) ||
+        Notification.permission !== "granted") {
+        return;
+    }
+
+    const consultasHoje = consultas.filter(
+        consulta => consulta.data === hoje
+    );
+
+    consultasHoje.forEach(consulta => {
+        // Uma notificação por consulta, por dia.
+        const jaNotificada = notificadas.some(
+            item => item.id === consulta.id && item.data === hoje
+        );
+
+        if (jaNotificada) {
+            return;
+        }
+
+        try {
+            new Notification("Maternis - Consulta hoje!", {
+                body:
+                    "Consulta com " + consulta.medico +
+                    " às " + consulta.hora + ".",
+                tag: "consulta-" + consulta.id + "-" + hoje
+            });
+
+            notificadas.push({
+                id: consulta.id,
+                data: hoje
+            });
+
+            salvarNoNavegador();
+        } catch (erro) {
+            console.error("Erro ao exibir notificação:", erro);
+        }
+    });
+}
+
+// Atualiza a lista e verifica as notificações ao abrir a página.
+mostrarConsultas();
+verificarConsultasDeHoje();
+
+// Verifica novamente a cada minuto enquanto a página estiver aberta.
+setInterval(() => {
+    mostrarConsultas();
+    verificarConsultasDeHoje();
+}, 60 * 1000);
+
+// Ao voltar para a aba, verifica se há consultas para hoje.
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+        mostrarConsultas();
+        verificarConsultasDeHoje();
+    }
+});
+
+// Verifica se a data mudou enquanto a página estava aberta.
+window.addEventListener("focus", () => {
+    mostrarConsultas();
+    verificarConsultasDeHoje();
+});
+</script>
+
+</body>
+</html>
