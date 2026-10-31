@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maternis - Gestação</title>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <!-- SDK DO SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         * {
             margin: 0;
@@ -21,6 +25,21 @@
         .gestacao {
             padding: 40px;
             min-height: 100vh;
+        }
+
+        .btn-voltar {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #d85b8b;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 20px;
+            transition: .2s;
+        }
+
+        .btn-voltar:hover {
+            color: #b94370;
         }
 
         .titulo {
@@ -61,7 +80,7 @@
             margin-bottom: 25px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 15px;
         }
 
         .linha-metodo {
@@ -92,6 +111,36 @@
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
+        }
+
+        .btn-salvar-gestacao {
+            align-self: flex-start;
+            background: #d85b8b;
+            color: white;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: .3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-salvar-gestacao:hover {
+            background: #b94370;
+        }
+
+        .btn-salvar-gestacao:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .status-msg {
+            font-size: 14px;
+            font-weight: bold;
         }
 
         .semana h3 {
@@ -181,6 +230,10 @@
 
     <section class="gestacao">
 
+        <a href="menu.html" class="btn-voltar">
+            <i class="fa-solid fa-arrow-left"></i> Voltar ao menu
+        </a>
+
         <div class="titulo">
             <h1>🤰 Minha Gestação</h1>
             <p>Acompanhe cada fase da gravidez e o desenvolvimento do bebê.</p>
@@ -189,7 +242,6 @@
         <div class="progresso">
             <h2>Progresso da gestação</h2>
 
-            <!-- Configuração e Escolha do Método logo abaixo do título -->
             <div class="config-data">
                 <div class="linha-metodo">
                     <label for="metodoCalculo">Calcular progresso por:</label>
@@ -202,16 +254,23 @@
                 <!-- Campo DUM -->
                 <div id="campoDUM" class="campos-dinamicos">
                     <label for="dumInput">Data da DUM:</label>
-                    <input type="date" id="dumInput" onchange="salvarEAtualizar()">
+                    <input type="date" id="dumInput" onchange="calcularGestacao()">
                 </div>
 
                 <!-- Campo Ultrassom -->
                 <div id="campoUltrassom" class="campos-dinamicos" style="display: none;">
                     <label for="semanasUS">Semanas no dia do exame:</label>
-                    <input type="number" id="semanasUS" min="1" max="42" placeholder="Ex: 8" onchange="salvarEAtualizar()" style="width: 80px;">
+                    <input type="number" id="semanasUS" min="1" max="42" placeholder="Ex: 8" onchange="calcularGestacao()" style="width: 80px;">
                     
                     <label for="dataUS">Data do exame:</label>
-                    <input type="date" id="dataUS" onchange="salvarEAtualizar()">
+                    <input type="date" id="dataUS" onchange="calcularGestacao()">
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn-salvar-gestacao" id="btnSalvarGestacao" onclick="salvarDadosSupabase()">
+                        <i class="fa-solid fa-floppy-disk"></i> Salvar dados
+                    </button>
+                    <span id="statusSalvar" class="status-msg"></span>
                 </div>
             </div>
 
@@ -264,11 +323,17 @@
     </section>
 
     <script>
+        const SUPABASE_URL = "https://llktarpnobeigwgxfwwz.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_OKqhjXKeDyuon0S05JJX-g_zvIl-Kk1";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let usuarioAtual = null;
+
         function alternarCampos() {
             const metodo = document.getElementById("metodoCalculo").value;
             document.getElementById("campoDUM").style.display = metodo === "dum" ? "flex" : "none";
             document.getElementById("campoUltrassom").style.display = metodo === "ultrassom" ? "flex" : "none";
-            salvarEAtualizar();
+            calcularGestacao();
         }
 
         function calcularGestacao() {
@@ -308,7 +373,6 @@
         }
 
         function atualizarInterface(semanas, dias) {
-            // Referência de escala total em 42 semanas
             const maxSemanasRef = 42;
             const porcentagem = Math.min(Math.round((semanas / maxSemanasRef) * 100), 100);
 
@@ -327,27 +391,67 @@
             document.getElementById("barraProgresso").style.width = `${porcentagem}%`;
         }
 
-        function salvarEAtualizar() {
-            const dados = {
-                metodo: document.getElementById("metodoCalculo").value,
-                dum: document.getElementById("dumInput").value,
-                semanasUS: document.getElementById("semanasUS").value,
-                dataUS: document.getElementById("dataUS").value
-            };
-            localStorage.setItem("maternis_dados_gestacao", JSON.stringify(dados));
-            calcularGestacao();
-        }
+        async function carregarDadosSupabase() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                window.location.href = "index.html";
+                return;
+            }
+            usuarioAtual = session.user;
 
-        window.onload = function () {
-            const salvos = JSON.parse(localStorage.getItem("maternis_dados_gestacao"));
-            if (salvos) {
-                document.getElementById("metodoCalculo").value = salvos.metodo || "dum";
-                document.getElementById("dumInput").value = salvos.dum || "";
-                document.getElementById("semanasUS").value = salvos.semanasUS || "";
-                document.getElementById("dataUS").value = salvos.dataUS || "";
+            const { data, error } = await supabaseClient
+                .from('gestacoes')
+                .select('*')
+                .eq('user_id', usuarioAtual.id)
+                .single();
+
+            if (data) {
+                document.getElementById("metodoCalculo").value = data.metodo || "dum";
+                document.getElementById("dumInput").value = data.dum || "";
+                document.getElementById("semanasUS").value = data.semanas_us || "";
+                document.getElementById("dataUS").value = data.data_us || "";
                 alternarCampos();
             }
-        };
+        }
+
+        async function salvarDadosSupabase() {
+            if (!usuarioAtual) return;
+
+            const btn = document.getElementById("btnSalvarGestacao");
+            const status = document.getElementById("statusSalvar");
+            btn.disabled = true;
+            status.style.color = "#a83d69";
+            status.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+
+            const payload = {
+                user_id: usuarioAtual.id,
+                metodo: document.getElementById("metodoCalculo").value,
+                dum: document.getElementById("dumInput").value || null,
+                semanas_us: document.getElementById("semanasUS").value ? parseInt(document.getElementById("semanasUS").value) : null,
+                data_us: document.getElementById("dataUS").value || null,
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                const { error } = await supabaseClient
+                    .from('gestacoes')
+                    .upsert(payload, { onConflict: 'user_id' });
+
+                if (error) throw error;
+
+                status.style.color = "green";
+                status.innerText = "✅ Dados salvos!";
+                calcularGestacao();
+            } catch (err) {
+                status.style.color = "red";
+                status.innerText = "❌ Erro: " + err.message;
+            } finally {
+                btn.disabled = false;
+                setTimeout(() => { status.innerText = ""; }, 4000);
+            }
+        }
+
+        window.onload = carregarDadosSupabase;
     </script>
 
 </body>
