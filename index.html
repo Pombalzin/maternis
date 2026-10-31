@@ -50,7 +50,7 @@
         }
 
         .hero{
-            min-height:90vh;
+            min-height:85vh;
             display:flex;
             align-items:center;
         }
@@ -79,6 +79,8 @@
             font-weight:600;
             border:none;
             transition:.3s;
+            text-decoration:none;
+            display:inline-block;
         }
 
         .btn-pink:hover{
@@ -163,10 +165,9 @@
 
         <div class="collapse navbar-collapse justify-content-end" id="menu">
             <ul class="navbar-nav align-items-center">
-                <!-- Área Dinâmica do Usuário / Botão de Entrar -->
                 <li class="nav-item" id="areaUsuarioHome">
                     <button class="btn btn-outline-pink ms-3" data-bs-toggle="modal" data-bs-target="#modalAuth">
-                        <i class="fa-solid fa-user me-1"></i> Entrar / Cadastrar
+                        <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Entrar
                     </button>
                 </li>
             </ul>
@@ -191,10 +192,7 @@
                     qualquer momento.
                 </p>
 
-                <!-- Botão substituído para abrir a modal de Login/Cadastro -->
-                <button class="btn btn-pink" id="btnHeroAuth" data-bs-toggle="modal" data-bs-target="#modalAuth">
-                    <i class="fa-solid fa-user me-2"></i> Entrar / Cadastrar
-                </button>
+                <div id="heroAcaoUsuario"></div>
             </div>
 
             <div class="col-lg-6 text-center">
@@ -232,7 +230,7 @@
     </div>
 </section>
 
-<!-- MODAL DE LOGIN / CADASTRO -->
+<!-- MODAL DE AUTENTICAÇÃO -->
 <div class="modal fade" id="modalAuth" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4 shadow">
@@ -247,7 +245,6 @@
                         <input type="email" class="form-control rounded-3" id="authEmail" placeholder="seu@email.com" required>
                     </div>
                     
-                    <!-- Campo de Senha com Opção de Ver/Ocultar -->
                     <div class="mb-3">
                         <label for="authSenha" class="form-label small fw-semibold text-muted">Senha</label>
                         <div class="input-group">
@@ -264,7 +261,7 @@
                 </form>
                 <div class="text-center small">
                     <span id="txtModoAuth" class="text-muted">Ainda não tem conta?</span>
-                    <a href="#" class="fw-bold text-decoration-none ms-1" style="color: #f48fb1;" onclick="alternarModoAuth()">Criar conta</a>
+                    <a href="#" class="fw-bold text-decoration-none ms-1" id="linkAlternarAuth" style="color: #f48fb1;" onclick="alternarModoAuth()">Criar conta</a>
                 </div>
             </div>
         </div>
@@ -277,7 +274,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- LÓGICA DE CONEXÃO COM O SUPABASE E AUTENTICAÇÃO -->
 <script>
     const SUPABASE_URL = "https://llktarpnobeigwgxfwwz.supabase.co";
     const SUPABASE_KEY = "sb_publishable_OKqhjXKeDyuon0S05JJX-g_zvIl-Kk1";
@@ -285,7 +281,6 @@
 
     let modoCadastro = false;
 
-    // Função para Alternar a Visibilidade da Senha (Ver/Ocultar)
     function toggleMostrarSenha() {
         const inputSenha = document.getElementById('authSenha');
         const iconeOlho = document.getElementById('iconeOlho');
@@ -301,15 +296,24 @@
         }
     }
 
-    // Alterna a interface da Modal entre Login e Cadastro
     function alternarModoAuth() {
         modoCadastro = !modoCadastro;
+
+        document.getElementById('authEmail').value = '';
+        document.getElementById('authSenha').value = '';
+
+        const inputSenha = document.getElementById('authSenha');
+        const iconeOlho = document.getElementById('iconeOlho');
+        inputSenha.type = 'password';
+        iconeOlho.classList.remove('fa-eye-slash');
+        iconeOlho.classList.add('fa-eye');
+
         document.getElementById('modalAuthTitle').textContent = modoCadastro ? 'Criar Nova Conta' : 'Entrar no Maternis';
         document.getElementById('btnAuthSubmit').textContent = modoCadastro ? 'Cadastrar' : 'Entrar';
         document.getElementById('txtModoAuth').textContent = modoCadastro ? 'Já possui uma conta?' : 'Ainda não tem conta?';
+        document.getElementById('linkAlternarAuth').textContent = modoCadastro ? 'Fazer login' : 'Criar conta';
     }
 
-    // Processa a entrada ou o registo no Supabase Auth
     async function processarAuth() {
         const email = document.getElementById('authEmail').value;
         const password = document.getElementById('authSenha').value;
@@ -328,6 +332,7 @@
                 alert('Erro ao entrar: ' + error.message);
             } else {
                 fecharModal();
+                window.location.href = 'menu.html';
             }
         }
     }
@@ -336,65 +341,55 @@
         const modalElement = document.getElementById('modalAuth');
         const modal = bootstrap.Modal.getInstance(modalElement);
         if (modal) modal.hide();
+        
+        document.getElementById('authEmail').value = '';
+        document.getElementById('authSenha').value = '';
     }
 
-    // Termina a sessão do utilizador
     async function fazerLogout() {
         await supabaseClient.auth.signOut();
         location.reload();
     }
 
-    // Atualiza a barra de navegação e botões dependendo se o utilizador está logado ou não
     function atualizarHomeUsuario(session) {
         const areaNav = document.getElementById('areaUsuarioHome');
-        const btnHero = document.getElementById('btnHeroAuth');
+        const heroAcao = document.getElementById('heroAcaoUsuario');
 
         if (session) {
             const nomeUsuario = session.user.email.split('@')[0];
             
-            // Atualiza o menu da Navbar
+            // Dropdown apenas com a opção Sair
             areaNav.innerHTML = `
                 <div class="dropdown ms-3">
                     <button class="btn btn-outline-pink dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="fa-solid fa-user-check me-1"></i> Olá, ${nomeUsuario}
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end border-0 shadow rounded-3">
-                        <li><a class="dropdown-item small" href="vacinas.html"><i class="fa-solid fa-syringe me-2 text-danger"></i>Vacinas do Bebê</a></li>
-                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item small text-danger" href="#" onclick="fazerLogout()"><i class="fa-solid fa-right-from-bracket me-2"></i>Sair</a></li>
                     </ul>
                 </div>
             `;
 
-            // Se o usuário estiver logado, o botão do centro leva direto para as vacinas
-            if (btnHero) {
-                btnHero.innerHTML = `<i class="fa-solid fa-syringe me-2"></i> Ver Vacinas do Bebê`;
-                btnHero.removeAttribute('data-bs-toggle');
-                btnHero.removeAttribute('data-bs-target');
-                btnHero.onclick = () => window.location.href = 'vacinas.html';
-            }
+            // Botão principal apontando para menu.html
+            heroAcao.innerHTML = `
+                <a href="menu.html" class="btn btn-pink">
+                    <i class="fa-solid fa-table-cells-large me-2"></i> Acessar Menu
+                </a>
+            `;
         } else {
             areaNav.innerHTML = `
                 <button class="btn btn-outline-pink ms-3" data-bs-toggle="modal" data-bs-target="#modalAuth">
-                    <i class="fa-solid fa-user me-1"></i> Entrar / Cadastrar
+                    <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Entrar
                 </button>
             `;
-
-            if (btnHero) {
-                btnHero.innerHTML = `<i class="fa-solid fa-user me-2"></i> Entrar / Cadastrar`;
-                btnHero.setAttribute('data-bs-toggle', 'modal');
-                btnHero.setAttribute('data-bs-target', '#modalAuth');
-                btnHero.onclick = null;
-            }
+            heroAcao.innerHTML = '';
         }
     }
 
-    // Monitora as alterações de login/logout em tempo real
     supabaseClient.auth.onAuthStateChange((event, session) => {
         atualizarHomeUsuario(session);
     });
 </script>
 
 </body>
-
 </html>
