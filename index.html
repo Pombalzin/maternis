@@ -155,7 +155,7 @@
 
 <nav class="navbar navbar-expand-lg">
     <div class="container">
-        <a class="navbar-brand" href="#">
+        <a class="navbar-brand" href="index.html">
             <i class="fa-solid fa-heart"></i> Maternis
         </a>
 
@@ -347,8 +347,11 @@
     }
 
     async function fazerLogout() {
-        await supabaseClient.auth.signOut();
-        location.reload();
+        if (confirm("Deseja realmente sair da sua conta?")) {
+            await supabaseClient.auth.signOut();
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
     }
 
     function atualizarHomeUsuario(session) {
@@ -358,19 +361,19 @@
         if (session) {
             const nomeUsuario = session.user.email.split('@')[0];
             
-            // Dropdown apenas com a opção Sair
+            // Botões "Olá" e "Sair" com estilo nativo na barra
             areaNav.innerHTML = `
-                <div class="dropdown ms-3">
-                    <button class="btn btn-outline-pink dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="fa-solid fa-user-check me-1"></i> Olá, ${nomeUsuario}
+                <div class="d-flex align-items-center gap-2 ms-3">
+                    <span class="fw-semibold text-muted small">
+                        <i class="fa-solid fa-user-circle text-pink me-1" style="color: #f48fb1;"></i> Olá, ${nomeUsuario}
+                    </span>
+                    <button class="btn btn-outline-pink btn-sm" onclick="fazerLogout()">
+                        <i class="fa-solid fa-right-from-bracket me-1"></i> Sair
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow rounded-3">
-                        <li><a class="dropdown-item small text-danger" href="#" onclick="fazerLogout()"><i class="fa-solid fa-right-from-bracket me-2"></i>Sair</a></li>
-                    </ul>
                 </div>
             `;
 
-            // Botão principal apontando para menu.html
+            // Botão principal no hero para abrir o menu
             heroAcao.innerHTML = `
                 <a href="menu.html" class="btn btn-pink">
                     <i class="fa-solid fa-table-cells-large me-2"></i> Acessar Menu
