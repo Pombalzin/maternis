@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- SDK DO SUPABASE -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -17,60 +18,73 @@
         body {
             background: #F8F4FF;
             font-family: 'Poppins', sans-serif;
+            color: #4a4a4a;
         }
 
         .topo {
             background: linear-gradient(135deg, #F78FB3, #D980FA);
             color: white;
-            padding: 25px;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
-            text-align: center;
-            position: relative;
+            padding: 20px 20px 45px 20px;
+            border-bottom-left-radius: 35px;
+            border-bottom-right-radius: 35px;
+            box-shadow: 0 4px 20px rgba(217, 128, 250, 0.35);
         }
 
-        .btn-voltar {
-            position: absolute;
-            left: 20px;
-            top: 25px;
+        .btn-voltar-topo {
             color: white;
             text-decoration: none;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            margin-bottom: 15px;
+            transition: all 0.2s ease;
         }
 
-        .btn-voltar:hover {
-            color: #fff;
+        .btn-voltar-topo:hover {
+            color: white;
             opacity: 0.85;
+            transform: translateX(-3px);
+        }
+
+        .main-container {
+            margin-top: -25px;
         }
 
         .card {
             border: none;
-            border-radius: 18px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, .08);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(217, 128, 250, 0.12);
         }
 
         .btn-salvar {
-            background: #D980FA;
+            background: linear-gradient(135deg, #F78FB3, #D980FA);
             color: white;
             font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
         }
 
         .btn-salvar:hover {
-            background: #c15df2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(217, 128, 250, 0.4);
             color: white;
         }
 
         .btn-salvar:disabled {
             background: #ccc;
+            transform: none;
+            box-shadow: none;
         }
 
         .btn-notificacao {
             background: #F78FB3;
             color: white;
             font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
         }
 
         .btn-notificacao:hover {
@@ -111,32 +125,37 @@
 <body>
 
     <div class="topo">
-        <a href="menu.html" class="btn-voltar">
-            <i class="fa-solid fa-arrow-left"></i> Menu
-        </a>
-        <h3>📅 Minhas Consultas</h3>
-        <p class="mb-0">Organize seus compromissos com o Maternis</p>
+        <div class="container" style="max-width: 750px;">
+            <a href="menu.html" class="btn-voltar-topo">
+                <i class="bi bi-arrow-left"></i> Voltar ao menu
+            </a>
+
+            <div class="text-center">
+                <h3 class="fw-bold mb-1">📅 Minhas Consultas</h3>
+                <p class="mb-0 opacity-90">Organize seus compromissos com o Maternis</p>
+            </div>
+        </div>
     </div>
 
-    <div class="container mt-4 mb-5" style="max-width: 750px;">
+    <div class="container main-container mb-5" style="max-width: 750px;">
 
         <div class="card p-4">
             <h5 class="mb-3 text-secondary">Cadastrar consulta</h5>
 
             <div class="mb-3">
                 <label for="medico" class="form-label fw-semibold text-muted">Médico / Especialidade</label>
-                <input type="text" class="form-control" id="medico" placeholder="Ex: Dra. Mariana - Obstetra">
+                <input type="text" class="form-control rounded-3" id="medico" placeholder="Ex: Dra. Mariana - Obstetra">
             </div>
 
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="data" class="form-label fw-semibold text-muted">Data</label>
-                    <input type="date" class="form-control" id="data">
+                    <input type="date" class="form-control rounded-3" id="data">
                 </div>
 
                 <div class="col-md-6 mb-3">
                     <label for="hora" class="form-label fw-semibold text-muted">Horário</label>
-                    <input type="time" class="form-control" id="hora">
+                    <input type="time" class="form-control rounded-3" id="hora">
                 </div>
             </div>
 
@@ -401,7 +420,6 @@
             consultas.forEach(c => {
                 const diff = calcularDiferencaDias(c.data);
 
-                // Dispara alertas para: 3 dias antes, 2 dias antes, véspera (1 dia) e dia da consulta (0 dias)
                 if (diff >= 0 && diff <= 3) {
                     const chaveAlerta = `${c.id}_dias_${diff}_${hoje}`;
 
@@ -430,7 +448,6 @@
 
         window.onload = inicializar;
 
-        // Monitora em segundo plano a cada 1 minuto se a aba estiver aberta
         setInterval(() => {
             renderizarConsultas();
             processarLembretes();
