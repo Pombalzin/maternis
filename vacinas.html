@@ -11,7 +11,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- SDK DO SUPABASE ADICIONADO AQUI -->
+    <!-- SDK DO SUPABASE -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -37,10 +37,27 @@
         .topo {
             background: linear-gradient(135deg, var(--primary-pink), var(--primary-purple));
             color: white;
-            padding: 30px 20px 45px 20px;
+            padding: 20px 20px 45px 20px;
             border-bottom-left-radius: 35px;
             border-bottom-right-radius: 35px;
             box-shadow: 0 4px 20px rgba(217, 128, 250, 0.35);
+        }
+
+        .btn-voltar-topo {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-voltar-topo:hover {
+            color: white;
+            opacity: 0.85;
+            transform: translateX(-3px);
         }
 
         .main-container {
@@ -217,15 +234,23 @@
 <body>
 
 <div class="topo">
-    <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <div>
-            <h2 class="fw-bold mb-1"><i class="bi bi-calendar2-heart-fill me-2"></i>Calendário de Vacinas Maternis</h2>
-            <p class="mb-0 opacity-90">Acompanhamento completo de vacinação do bebê de 0 a 2 anos (PNI / SUS)</p>
-        </div>
-        <div>
-            <span class="badge bg-white text-dark px-3 py-2 rounded-pill shadow-sm fs-6">
-                <i class="bi bi-heart-fill text-danger me-1"></i> Maternis
-            </span>
+    <div class="container">
+        <!-- Botão Voltar ao Menu alinhado à esquerda no Topo -->
+        <a href="menu.html" class="btn-voltar-topo">
+            <i class="bi bi-arrow-left"></i> Voltar ao menu
+        </a>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="bi bi-calendar2-heart-fill me-2"></i>Calendário de Vacinas Maternis</h2>
+                <p class="mb-0 opacity-90">Acompanhamento completo de vacinação do bebê de 0 a 2 anos (PNI / SUS)</p>
+            </div>
+           
+            <div>
+                <span class="badge bg-white text-dark px-3 py-2 rounded-pill shadow-sm fs-6">
+                    <i class="bi bi-heart-fill text-danger me-1"></i> Maternis
+                </span>
+            </div>
         </div>
     </div>
 </div>
@@ -692,7 +717,7 @@ async function limparRegistros() {
 }
 
 // ==========================================
-// 7. RENDERIZAR HISTÓRICO (COM CORREÇÃO DE DATA)
+// 7. RENDERIZAR HISTÓRICO
 // ==========================================
 function renderizarHistorico() {
     const list = document.getElementById('listaHistorico');

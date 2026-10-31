@@ -1,414 +1,449 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultas - Maternis</title>
 
-<title>Consultas - Maternis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- SDK DO SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<style>
-body {
-    background: #F8F4FF;
-    font-family: 'Poppins', sans-serif;
-}
+    <style>
+        body {
+            background: #F8F4FF;
+            font-family: 'Poppins', sans-serif;
+        }
 
-.topo {
-    background: linear-gradient(135deg, #F78FB3, #D980FA);
-    color: white;
-    padding: 25px;
-    border-bottom-left-radius: 30px;
-    border-bottom-right-radius: 30px;
-    text-align: center;
-}
+        .topo {
+            background: linear-gradient(135deg, #F78FB3, #D980FA);
+            color: white;
+            padding: 25px;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            text-align: center;
+            position: relative;
+        }
 
-.card {
-    border: none;
-    border-radius: 18px;
-    box-shadow: 0 5px 15px rgba(0,0,0,.08);
-}
+        .btn-voltar {
+            position: absolute;
+            left: 20px;
+            top: 25px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
 
-.btn-salvar {
-    background: #D980FA;
-    color: white;
-}
+        .btn-voltar:hover {
+            color: #fff;
+            opacity: 0.85;
+        }
 
-.btn-salvar:hover {
-    background: #c15df2;
-    color: white;
-}
+        .card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .08);
+        }
 
-.btn-notificacao {
-    background: #F78FB3;
-    color: white;
-}
+        .btn-salvar {
+            background: #D980FA;
+            color: white;
+            font-weight: 600;
+        }
 
-.btn-notificacao:hover {
-    background: #ed719d;
-    color: white;
-}
+        .btn-salvar:hover {
+            background: #c15df2;
+            color: white;
+        }
 
-.consulta {
-    background: white;
-    border-radius: 15px;
-    padding: 15px;
-    margin-top: 15px;
-    box-shadow: 0 3px 10px rgba(0,0,0,.06);
-}
+        .btn-salvar:disabled {
+            background: #ccc;
+        }
 
-.consulta-hoje {
-    border-left: 5px solid #D980FA;
-}
+        .btn-notificacao {
+            background: #F78FB3;
+            color: white;
+            font-weight: 600;
+        }
 
-.aviso-hoje {
-    background: #f3e4ff;
-    color: #7735a0;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 15px;
-}
-</style>
+        .btn-notificacao:hover {
+            background: #ed719d;
+            color: white;
+        }
+
+        .consulta {
+            background: white;
+            border-radius: 15px;
+            padding: 18px;
+            margin-top: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, .06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .consulta-hoje {
+            border-left: 6px solid #D980FA;
+            background: #fdf8ff;
+        }
+
+        .consulta-proxima {
+            border-left: 6px solid #F78FB3;
+        }
+
+        .aviso-banner {
+            background: #f3e4ff;
+            color: #7735a0;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="topo">
-    <h3>📅 Minhas Consultas</h3>
-    <p class="mb-0">Organize seus compromissos com o Maternis</p>
-</div>
-
-<div class="container mt-4 mb-5">
-
-    <div class="card p-4">
-
-        <h5 class="mb-3">Cadastrar consulta</h5>
-
-        <div class="mb-3">
-            <label for="medico" class="form-label">Médico</label>
-            <input type="text" class="form-control" id="medico"
-                   placeholder="Nome do médico">
-        </div>
-
-        <div class="mb-3">
-            <label for="data" class="form-label">Data</label>
-            <input type="date" class="form-control" id="data">
-        </div>
-
-        <div class="mb-3">
-            <label for="hora" class="form-label">Horário</label>
-            <input type="time" class="form-control" id="hora">
-        </div>
-
-        <button class="btn btn-salvar w-100"
-                onclick="salvarConsulta()">
-            <i class="bi bi-calendar-plus"></i>
-            Salvar Consulta
-        </button>
-
-        <hr>
-
-        <button class="btn btn-notificacao w-100"
-                onclick="ativarNotificacoes()">
-            <i class="bi bi-bell"></i>
-            Ativar notificações
-        </button>
-
-        <small class="text-muted mt-2 text-center">
-            Receba avisos sobre as consultas agendadas para hoje.
-        </small>
-
-        <div id="statusNotificacao" class="mt-3 text-center"
-             role="status" aria-live="polite"></div>
+    <div class="topo">
+        <a href="menu.html" class="btn-voltar">
+            <i class="fa-solid fa-arrow-left"></i> Menu
+        </a>
+        <h3>📅 Minhas Consultas</h3>
+        <p class="mb-0">Organize seus compromissos com o Maternis</p>
     </div>
 
-    <div id="avisoConsultas"></div>
+    <div class="container mt-4 mb-5" style="max-width: 750px;">
 
-    <h5 class="mt-4">Minhas consultas cadastradas</h5>
+        <div class="card p-4">
+            <h5 class="mb-3 text-secondary">Cadastrar consulta</h5>
 
-    <div id="lista"></div>
-
-</div>
-
-<script>
-let consultas = JSON.parse(
-    localStorage.getItem("consultas") || "[]"
-);
-
-let notificadas = JSON.parse(
-    localStorage.getItem("consultasNotificadas") || "[]"
-);
-
-// Gera identificadores para consultas antigas que não possuem ID.
-consultas.forEach(consulta => {
-    if (!consulta.id) {
-        consulta.id = criarId();
-    }
-});
-
-salvarNoNavegador();
-
-function criarId() {
-    if (window.crypto && crypto.randomUUID) {
-        return crypto.randomUUID();
-    }
-
-    return Date.now().toString(36) +
-        Math.random().toString(36).slice(2);
-}
-
-function salvarNoNavegador() {
-    localStorage.setItem("consultas", JSON.stringify(consultas));
-    localStorage.setItem(
-        "consultasNotificadas",
-        JSON.stringify(notificadas)
-    );
-}
-
-// Retorna a data local no formato AAAA-MM-DD.
-function dataDeHoje() {
-    const agora = new Date();
-    const ano = agora.getFullYear();
-    const mes = String(agora.getMonth() + 1).padStart(2, "0");
-    const dia = String(agora.getDate()).padStart(2, "0");
-
-    return `${ano}-${mes}-${dia}`;
-}
-
-function formatarData(data) {
-    if (!data) return "";
-
-    const [ano, mes, dia] = data.split("-");
-    return `${dia}/${mes}/${ano}`;
-}
-
-function escaparHTML(valor) {
-    return String(valor).replace(/[&<>"']/g, caractere => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-    })[caractere]);
-}
-
-function salvarConsulta() {
-    const medico = document.getElementById("medico").value.trim();
-    const data = document.getElementById("data").value;
-    const hora = document.getElementById("hora").value;
-
-    if (!medico || !data || !hora) {
-        alert("Preencha todos os campos.");
-        return;
-    }
-
-    if (data < dataDeHoje()) {
-        alert("Escolha a data de hoje ou uma data futura.");
-        return;
-    }
-
-    consultas.push({
-        id: criarId(),
-        medico,
-        data,
-        hora
-    });
-
-    salvarNoNavegador();
-
-    document.getElementById("medico").value = "";
-    document.getElementById("data").value = "";
-    document.getElementById("hora").value = "";
-
-    mostrarConsultas();
-    verificarConsultasDeHoje();
-
-    alert("Consulta salva com sucesso!");
-}
-
-function mostrarConsultas() {
-    const lista = document.getElementById("lista");
-    const aviso = document.getElementById("avisoConsultas");
-    const hoje = dataDeHoje();
-
-    lista.innerHTML = "";
-    aviso.innerHTML = "";
-
-    if (consultas.length === 0) {
-        lista.innerHTML =
-            '<p class="text-center text-muted mt-3">' +
-            'Nenhuma consulta cadastrada.</p>';
-        return;
-    }
-
-    const ordenadas = consultas
-        .map((consulta, indice) => ({ consulta, indice }))
-        .sort((a, b) =>
-            (a.consulta.data + a.consulta.hora)
-                .localeCompare(b.consulta.data + b.consulta.hora)
-        );
-
-    const consultasHoje = consultas.filter(c => c.data === hoje);
-
-    if (consultasHoje.length > 0) {
-        aviso.innerHTML = `
-            <div class="aviso-hoje mt-4">
-                <h5><i class="bi bi-bell-fill"></i> Consultas para hoje</h5>
-                <p class="mb-0">
-                    Você tem ${consultasHoje.length}
-                    consulta(s) agendada(s) para hoje.
-                </p>
+            <div class="mb-3">
+                <label for="medico" class="form-label fw-semibold text-muted">Médico / Especialidade</label>
+                <input type="text" class="form-control" id="medico" placeholder="Ex: Dra. Mariana - Obstetra">
             </div>
-        `;
-    }
 
-    ordenadas.forEach(({ consulta: c, indice }) => {
-        const elemento = document.createElement("div");
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="data" class="form-label fw-semibold text-muted">Data</label>
+                    <input type="date" class="form-control" id="data">
+                </div>
 
-        elemento.className = "consulta" +
-            (c.data === hoje ? " consulta-hoje" : "");
+                <div class="col-md-6 mb-3">
+                    <label for="hora" class="form-label fw-semibold text-muted">Horário</label>
+                    <input type="time" class="form-control" id="hora">
+                </div>
+            </div>
 
-        elemento.innerHTML = `
-            <h5>👩‍⚕️ ${escaparHTML(c.medico)}</h5>
-
-            <p>
-                <b>📅 Data:</b> ${formatarData(c.data)}<br>
-                <b>🕒 Horário:</b> ${escaparHTML(c.hora)}
-                ${c.data === hoje
-                    ? '<br><span class="text-success fw-bold">' +
-                      'Consulta marcada para hoje!</span>'
-                    : ""}
-            </p>
-
-            <button class="btn btn-danger btn-sm"
-                    onclick="excluirConsulta(${indice})">
-                <i class="bi bi-trash"></i> Excluir
+            <button class="btn btn-salvar w-100 py-2 mt-2" id="btnSalvarConsulta" onclick="salvarConsulta()">
+                <i class="bi bi-calendar-plus me-1"></i> Salvar Consulta
             </button>
-        `;
 
-        lista.appendChild(elemento);
-    });
-}
+            <div id="statusSalvar" class="mt-2 text-center small fw-bold"></div>
 
-function excluirConsulta(indice) {
-    if (!confirm("Deseja excluir esta consulta?")) {
-        return;
-    }
+            <hr>
 
-    const consulta = consultas[indice];
+            <button class="btn btn-notificacao w-100 py-2" onclick="ativarNotificacoes()">
+                <i class="bi bi-bell me-1"></i> Ativar lembretes no navegador
+            </button>
 
-    // Remove também o registro da notificação dessa consulta.
-    notificadas = notificadas.filter(
-        item => item.id !== consulta.id
-    );
+            <small class="text-muted mt-2 text-center d-block">
+                O Maternis emitirá notificações com 3 dias de antecedência, na véspera e no dia do exame.
+            </small>
 
-    consultas.splice(indice, 1);
+            <div id="statusNotificacao" class="mt-2 text-center small fw-semibold" role="status"></div>
+        </div>
 
-    salvarNoNavegador();
-    mostrarConsultas();
-}
+        <div id="avisoConsultas" class="mt-4"></div>
 
-async function ativarNotificacoes() {
-    const status = document.getElementById("statusNotificacao");
+        <h5 class="mt-4 text-secondary">Minhas consultas agendadas</h5>
 
-    if (!("Notification" in window)) {
-        status.textContent =
-            "Seu navegador não oferece suporte a notificações.";
-        return;
-    }
+        <div id="lista"></div>
 
-    if (Notification.permission === "denied") {
-        status.textContent =
-            "As notificações estão bloqueadas nas configurações do navegador.";
-        return;
-    }
+    </div>
 
-    try {
-        const permissao = await Notification.requestPermission();
+    <script>
+        const SUPABASE_URL = "https://llktarpnobeigwgxfwwz.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_OKqhjXKeDyuon0S05JJX-g_zvIl-Kk1";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        if (permissao === "granted") {
-            status.textContent =
-                "Notificações ativadas! Vamos verificar as consultas de hoje.";
-            verificarConsultasDeHoje();
-        } else {
-            status.textContent =
-                "Permissão não concedida. Ative as notificações no navegador.";
-        }
-    } catch (erro) {
-        status.textContent =
-            "Não foi possível ativar as notificações neste navegador.";
-    }
-}
+        let usuarioAtual = null;
+        let consultas = [];
 
-function verificarConsultasDeHoje() {
-    const hoje = dataDeHoje();
-
-    // A notificação do navegador só é exibida com permissão.
-    if (!("Notification" in window) ||
-        Notification.permission !== "granted") {
-        return;
-    }
-
-    const consultasHoje = consultas.filter(
-        consulta => consulta.data === hoje
-    );
-
-    consultasHoje.forEach(consulta => {
-        // Uma notificação por consulta, por dia.
-        const jaNotificada = notificadas.some(
-            item => item.id === consulta.id && item.data === hoje
-        );
-
-        if (jaNotificada) {
-            return;
+        function dataDeHoje() {
+            const agora = new Date();
+            const ano = agora.getFullYear();
+            const mes = String(agora.getMonth() + 1).padStart(2, "0");
+            const dia = String(agora.getDate()).padStart(2, "0");
+            return `${ano}-${mes}-${dia}`;
         }
 
-        try {
-            new Notification("Maternis - Consulta hoje!", {
-                body:
-                    "Consulta com " + consulta.medico +
-                    " às " + consulta.hora + ".",
-                tag: "consulta-" + consulta.id + "-" + hoje
+        function formatarData(dataISO) {
+            if (!dataISO) return "";
+            const [ano, mes, dia] = dataISO.split("-");
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        function calcularDiferencaDias(dataString) {
+            const hoje = new Date(dataDeHoje() + "T00:00:00");
+            const dataConsulta = new Date(dataString + "T00:00:00");
+            return Math.ceil((dataConsulta - hoje) / (1000 * 60 * 60 * 24));
+        }
+
+        function escaparHTML(valor) {
+            return String(valor).replace(/[&<>"']/g, caractere => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            })[caractere]);
+        }
+
+        async function inicializar() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                window.location.href = "index.html";
+                return;
+            }
+            usuarioAtual = session.user;
+            await carregarConsultasSupabase();
+        }
+
+        async function carregarConsultasSupabase() {
+            const { data, error } = await supabaseClient
+                .from('consultas')
+                .select('*')
+                .eq('user_id', usuarioAtual.id)
+                .order('data', { ascending: true })
+                .order('hora', { ascending: true });
+
+            if (error) {
+                console.error("Erro ao carregar consultas:", error);
+                return;
+            }
+
+            consultas = data || [];
+            renderizarConsultas();
+            processarLembretes();
+        }
+
+        async function salvarConsulta() {
+            const medico = document.getElementById("medico").value.trim();
+            const data = document.getElementById("data").value;
+            const hora = document.getElementById("hora").value;
+            const status = document.getElementById("statusSalvar");
+            const btn = document.getElementById("btnSalvarConsulta");
+
+            if (!medico || !data || !hora) {
+                alert("Preencha todos os campos.");
+                return;
+            }
+
+            if (data < dataDeHoje()) {
+                alert("Escolha a data de hoje ou uma data futura.");
+                return;
+            }
+
+            btn.disabled = true;
+            status.style.color = "#7735a0";
+            status.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Gravando consulta...';
+
+            const payload = {
+                user_id: usuarioAtual.id,
+                medico,
+                data,
+                hora
+            };
+
+            const { error } = await supabaseClient
+                .from('consultas')
+                .insert([payload]);
+
+            btn.disabled = false;
+
+            if (error) {
+                status.style.color = "red";
+                status.innerText = "Erro ao salvar consulta: " + error.message;
+            } else {
+                status.style.color = "green";
+                status.innerText = "Consulta salva com sucesso!";
+                document.getElementById("medico").value = "";
+                document.getElementById("data").value = "";
+                document.getElementById("hora").value = "";
+                await carregarConsultasSupabase();
+            }
+
+            setTimeout(() => { status.innerText = ""; }, 4000);
+        }
+
+        async function excluirConsulta(id) {
+            if (!confirm("Deseja realmente excluir esta consulta?")) return;
+
+            const { error } = await supabaseClient
+                .from('consultas')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                alert("Erro ao excluir: " + error.message);
+            } else {
+                await carregarConsultasSupabase();
+            }
+        }
+
+        function renderizarConsultas() {
+            const lista = document.getElementById("lista");
+            const aviso = document.getElementById("avisoConsultas");
+            const hoje = dataDeHoje();
+
+            lista.innerHTML = "";
+            aviso.innerHTML = "";
+
+            if (consultas.length === 0) {
+                lista.innerHTML = '<p class="text-center text-muted mt-3">Nenhuma consulta cadastrada no momento.</p>';
+                return;
+            }
+
+            const consultasHoje = consultas.filter(c => c.data === hoje);
+            const consultasProximas = consultas.filter(c => {
+                const diff = calcularDiferencaDias(c.data);
+                return diff > 0 && diff <= 3;
             });
 
-            notificadas.push({
-                id: consulta.id,
-                data: hoje
+            if (consultasHoje.length > 0 || consultasProximas.length > 0) {
+                let msg = "";
+                if (consultasHoje.length > 0) {
+                    msg += `<p class="mb-1"><i class="bi bi-exclamation-circle-fill me-1"></i> Você possui <strong>${consultasHoje.length} consulta(s) agendada(s) para hoje!</strong></p>`;
+                }
+                if (consultasProximas.length > 0) {
+                    msg += `<p class="mb-0"><i class="bi bi-clock-history me-1"></i> Você possui <strong>${consultasProximas.length} consulta(s) nos próximos 3 dias.</strong></p>`;
+                }
+
+                aviso.innerHTML = `<div class="aviso-banner">${msg}</div>`;
+            }
+
+            consultas.forEach(c => {
+                const diff = calcularDiferencaDias(c.data);
+                let classeEspecial = "";
+                let tagStatus = "";
+
+                if (diff === 0) {
+                    classeEspecial = " consulta-hoje";
+                    tagStatus = '<span class="badge bg-purple text-white" style="background:#D980FA;">Hoje</span>';
+                } else if (diff > 0 && diff <= 3) {
+                    classeEspecial = " consulta-proxima";
+                    tagStatus = `<span class="badge bg-warning text-dark">Em ${diff} dia${diff > 1 ? 's' : ''}</span>`;
+                }
+
+                const item = document.createElement("div");
+                item.className = "consulta" + classeEspecial;
+                item.innerHTML = `
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h5 class="mb-0 text-dark">👩‍⚕️ ${escaparHTML(c.medico)}</h5>
+                            ${tagStatus}
+                        </div>
+                        <p class="mb-0 text-secondary small">
+                            <b><i class="bi bi-calendar-event"></i> Data:</b> ${formatarData(c.data)} &nbsp;|&nbsp;
+                            <b><i class="bi bi-clock"></i> Horário:</b> ${escaparHTML(c.hora).substring(0, 5)}
+                        </p>
+                    </div>
+
+                    <button class="btn btn-outline-danger btn-sm rounded-3" onclick="excluirConsulta('${c.id}')" title="Excluir">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                `;
+
+                lista.appendChild(item);
+            });
+        }
+
+        async function ativarNotificacoes() {
+            const status = document.getElementById("statusNotificacao");
+
+            if (!("Notification" in window)) {
+                status.textContent = "Seu navegador não oferece suporte a notificações.";
+                return;
+            }
+
+            if (Notification.permission === "denied") {
+                status.textContent = "Notificações bloqueadas no navegador. Altere as permissões do site.";
+                return;
+            }
+
+            try {
+                const permissao = await Notification.requestPermission();
+                if (permissao === "granted") {
+                    status.style.color = "green";
+                    status.textContent = "Notificações ativadas com sucesso!";
+                    processarLembretes();
+                } else {
+                    status.style.color = "red";
+                    status.textContent = "Permissão recusada pelo usuário.";
+                }
+            } catch (err) {
+                status.textContent = "Erro ao solicitar permissão de notificações.";
+            }
+        }
+
+        function processarLembretes() {
+            if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+            const notificadas = JSON.parse(localStorage.getItem("maternis_notificadas") || "{}");
+            const hoje = dataDeHoje();
+
+            consultas.forEach(c => {
+                const diff = calcularDiferencaDias(c.data);
+
+                // Dispara alertas para: 3 dias antes, 2 dias antes, véspera (1 dia) e dia da consulta (0 dias)
+                if (diff >= 0 && diff <= 3) {
+                    const chaveAlerta = `${c.id}_dias_${diff}_${hoje}`;
+
+                    if (!notificadas[chaveAlerta]) {
+                        let texto = "";
+                        if (diff === 0) {
+                            texto = `Você tem consulta marcada para HOJE às ${c.hora.substring(0, 5)} com ${c.medico}.`;
+                        } else if (diff === 1) {
+                            texto = `Lembrete: sua consulta com ${c.medico} é amanhã às ${c.hora.substring(0, 5)}.`;
+                        } else {
+                            texto = `Atenção: faltam ${diff} dias para sua consulta com ${c.medico} (${formatarData(c.data)} às ${c.hora.substring(0, 5)}).`;
+                        }
+
+                        new Notification("Maternis - Lembrete de Consulta", {
+                            body: texto,
+                            icon: "https://cdn-icons-png.flaticon.com/512/3652/3652191.png"
+                        });
+
+                        notificadas[chaveAlerta] = true;
+                    }
+                }
             });
 
-            salvarNoNavegador();
-        } catch (erro) {
-            console.error("Erro ao exibir notificação:", erro);
+            localStorage.setItem("maternis_notificadas", JSON.stringify(notificadas));
         }
-    });
-}
 
-// Atualiza a lista e verifica as notificações ao abrir a página.
-mostrarConsultas();
-verificarConsultasDeHoje();
+        window.onload = inicializar;
 
-// Verifica novamente a cada minuto enquanto a página estiver aberta.
-setInterval(() => {
-    mostrarConsultas();
-    verificarConsultasDeHoje();
-}, 60 * 1000);
+        // Monitora em segundo plano a cada 1 minuto se a aba estiver aberta
+        setInterval(() => {
+            renderizarConsultas();
+            processarLembretes();
+        }, 60000);
 
-// Ao voltar para a aba, verifica se há consultas para hoje.
-document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-        mostrarConsultas();
-        verificarConsultasDeHoje();
-    }
-});
-
-// Verifica se a data mudou enquanto a página estava aberta.
-window.addEventListener("focus", () => {
-    mostrarConsultas();
-    verificarConsultasDeHoje();
-});
-</script>
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+                renderizarConsultas();
+                processarLembretes();
+            }
+        });
+    </script>
 
 </body>
+
 </html>
