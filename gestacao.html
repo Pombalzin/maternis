@@ -53,6 +53,47 @@
             margin-bottom: 20px;
         }
 
+        /* Configuração do Método de Cálculo */
+        .config-data {
+            background: #fff0f5;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .linha-metodo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .config-data label {
+            color: #a83d69;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .config-data select,
+        .config-data input {
+            padding: 8px 12px;
+            border: 1px solid #d85b8b;
+            border-radius: 8px;
+            outline: none;
+            background: white;
+            font-size: 14px;
+        }
+
+        .campos-dinamicos {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
         .semana h3 {
             color: #d85b8b;
             margin-bottom: 10px;
@@ -78,28 +119,14 @@
             transition: width 0.5s ease-in-out;
         }
 
-        /* Configuração de Data */
-        .config-data {
-            background: #fff0f5;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
+        .info-semanas {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 15px;
+            color: #666;
+            font-size: 14px;
             flex-wrap: wrap;
-        }
-
-        .config-data label {
-            color: #a83d69;
-            font-weight: bold;
-        }
-
-        .config-data input {
-            padding: 8px 12px;
-            border: 1px solid #d85b8b;
-            border-radius: 8px;
-            outline: none;
+            gap: 8px;
         }
 
         /* Cards */
@@ -147,35 +174,6 @@
         .card a:hover {
             background: #b94370;
         }
-
-        /* Agenda */
-        .agenda {
-            background: white;
-            margin-top: 40px;
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 5px 15px #0002;
-        }
-
-        .agenda h2 {
-            color: #a83d69;
-            margin-bottom: 20px;
-        }
-
-        .evento {
-            display: flex;
-            gap: 20px;
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .evento strong {
-            color: #d85b8b;
-        }
-
-        .evento p {
-            color: #555;
-        }
     </style>
 </head>
 
@@ -191,12 +189,33 @@
         <div class="progresso">
             <h2>Progresso da gestação</h2>
 
-            <!-- Seleção da DUM -->
+            <!-- Configuração e Escolha do Método logo abaixo do título -->
             <div class="config-data">
-                <label for="dumInput">Data da Última Menstruação (DUM):</label>
-                <input type="date" id="dumInput" onchange="salvarEAtualizar()">
+                <div class="linha-metodo">
+                    <label for="metodoCalculo">Calcular progresso por:</label>
+                    <select id="metodoCalculo" onchange="alternarCampos()">
+                        <option value="dum">Data da Última Menstruação (DUM)</option>
+                        <option value="ultrassom">Semanas informadas no Ultrassom</option>
+                    </select>
+                </div>
+
+                <!-- Campo DUM -->
+                <div id="campoDUM" class="campos-dinamicos">
+                    <label for="dumInput">Data da DUM:</label>
+                    <input type="date" id="dumInput" onchange="salvarEAtualizar()">
+                </div>
+
+                <!-- Campo Ultrassom -->
+                <div id="campoUltrassom" class="campos-dinamicos" style="display: none;">
+                    <label for="semanasUS">Semanas no dia do exame:</label>
+                    <input type="number" id="semanasUS" min="1" max="42" placeholder="Ex: 8" onchange="salvarEAtualizar()" style="width: 80px;">
+                    
+                    <label for="dataUS">Data do exame:</label>
+                    <input type="date" id="dataUS" onchange="salvarEAtualizar()">
+                </div>
             </div>
 
+            <!-- Exibição do Progresso -->
             <div class="semana">
                 <h3 id="semanaTexto">Semana 0</h3>
                 <p id="trimestreTexto">Informe a data para calcular.</p>
@@ -205,7 +224,10 @@
                     <div class="preenchimento" id="barraProgresso"></div>
                 </div>
 
-                <span id="semanasContador">0 de 40 semanas</span>
+                <div class="info-semanas">
+                    <span id="semanasContador">0 de até 42 semanas</span>
+                    <span id="previsaoParto">Parto previsto entre 37 e 42 semanas</span>
+                </div>
             </div>
         </div>
 
@@ -239,130 +261,94 @@
             </div>
         </div>
 
-        <div class="agenda">
-            <h2>📅 Próximos eventos</h2>
-
-            <div class="evento">
-                <strong>15/08</strong>
-                <p>Consulta pré-natal</p>
-            </div>
-
-            <div class="evento">
-                <strong>22/08</strong>
-                <p>Ultrassom morfológico</p>
-            </div>
-        </div>
-
     </section>
-<div class="config-data">
-    <label for="metodoCalculo">Calcular progresso por:</label>
-    <select id="metodoCalculo" onchange="alternarCampos()" class="form-select">
-        <option value="dum">Data da Última Menstruação (DUM)</option>
-        <option value="ultrassom">Semanas informadas no Ultrassom</option>
-    </select>
 
-    <!-- Campo DUM -->
-    <div id="campoDUM" class="mt-2">
-        <label for="dumInput">Data da DUM:</label>
-        <input type="date" id="dumInput" onchange="salvarEAtualizar()">
-    </div>
+    <script>
+        function alternarCampos() {
+            const metodo = document.getElementById("metodoCalculo").value;
+            document.getElementById("campoDUM").style.display = metodo === "dum" ? "flex" : "none";
+            document.getElementById("campoUltrassom").style.display = metodo === "ultrassom" ? "flex" : "none";
+            salvarEAtualizar();
+        }
 
-    <!-- Campo Ultrassom -->
-    <div id="campoUltrassom" class="mt-2" style="display: none;">
-        <label for="semanasUS">Semanas no dia do exame:</label>
-        <input type="number" id="semanasUS" min="1" max="40" placeholder="Ex: 8" onchange="salvarEAtualizar()" style="width: 80px;">
-        
-        <label for="dataUS" class="ms-2">Data do exame:</label>
-        <input type="date" id="dataUS" onchange="salvarEAtualizar()">
-    </div>
-</div>
+        function calcularGestacao() {
+            const metodo = document.getElementById("metodoCalculo").value;
+            let semanasTotais = 0;
+            let diasRestantes = 0;
 
-<script>
-function alternarCampos() {
-    const metodo = document.getElementById("metodoCalculo").value;
-    document.getElementById("campoDUM").style.display = metodo === "dum" ? "block" : "none";
-    document.getElementById("campoUltrassom").style.display = metodo === "ultrassom" ? "block" : "none";
-    salvarEAtualizar();
-}
+            if (metodo === "dum") {
+                const dumValor = document.getElementById("dumInput").value;
+                if (!dumValor) return;
 
-function calcularGestacao() {
-    const metodo = document.getElementById("metodoCalculo").value;
-    let semanasTotais = 0;
-    let diasRestantes = 0;
+                const inicio = new Date(dumValor + "T00:00:00");
+                const hoje = new Date();
+                const diffDias = Math.floor((hoje - inicio) / (1000 * 60 * 60 * 24));
 
-    if (metodo === "dum") {
-        const dumValor = document.getElementById("dumInput").value;
-        if (!dumValor) return;
+                if (diffDias < 0) return;
+                semanasTotais = Math.floor(diffDias / 7);
+                diasRestantes = diffDias % 7;
+            } else {
+                const semanasInformadas = parseInt(document.getElementById("semanasUS").value);
+                const dataExameValor = document.getElementById("dataUS").value;
 
-        const inicio = new Date(dumValor + "T00:00:00");
-        const hoje = new Date();
-        const diffDias = Math.floor((hoje - inicio) / (1000 * 60 * 60 * 24));
+                if (!semanasInformadas || !dataExameValor) return;
 
-        if (diffDias < 0) return;
-        semanasTotais = Math.floor(diffDias / 7);
-        diasRestantes = diffDias % 7;
-    } else {
-        const semanasInformadas = parseInt(document.getElementById("semanasUS").value);
-        const dataExameValor = document.getElementById("dataUS").value;
+                const dataExame = new Date(dataExameValor + "T00:00:00");
+                const hoje = new Date();
+                const diffDiasExame = Math.floor((hoje - dataExame) / (1000 * 60 * 60 * 24));
 
-        if (!semanasInformadas || !dataExameValor) return;
+                const diasIniciais = (semanasInformadas * 7) + diffDiasExame;
+                if (diasIniciais < 0) return;
 
-        const dataExame = new Date(dataExameValor + "T00:00:00");
-        const hoje = new Date();
-        const diffDiasExame = Math.floor((hoje - dataExame) / (1000 * 60 * 60 * 24));
+                semanasTotais = Math.floor(diasIniciais / 7);
+                diasRestantes = diasIniciais % 7;
+            }
 
-        const diasIniciais = (semanasInformadas * 7) + diffDiasExame;
-        if (diasIniciais < 0) return;
+            atualizarInterface(semanasTotais, diasRestantes);
+        }
 
-        semanasTotais = Math.floor(diasIniciais / 7);
-        diasRestantes = diasIniciais % 7;
-    }
+        function atualizarInterface(semanas, dias) {
+            // Referência de escala total em 42 semanas
+            const maxSemanasRef = 42;
+            const porcentagem = Math.min(Math.round((semanas / maxSemanasRef) * 100), 100);
 
-    atualizarInterface(semanasTotais, diasRestantes);
-}
+            let trimestre = "";
+            if (semanas < 13) {
+                trimestre = "Você está no primeiro trimestre da gestação.";
+            } else if (semanas < 27) {
+                trimestre = "Você está no segundo trimestre da gestação.";
+            } else {
+                trimestre = "Você está no terceiro trimestre da gestação.";
+            }
 
-function atualizarInterface(semanas, dias) {
-    const semanasLimitadas = Math.min(Math.max(semanas, 0), 40);
-    const porcentagem = (semanasLimitadas / 40) * 100;
+            document.getElementById("semanaTexto").innerText = `Semana ${semanas}` + (dias > 0 ? ` + ${dias} dias` : "");
+            document.getElementById("trimestreTexto").innerText = trimestre;
+            document.getElementById("semanasContador").innerText = `${semanas} de até 42 semanas`;
+            document.getElementById("barraProgresso").style.width = `${porcentagem}%`;
+        }
 
-    let trimestre = "";
-    if (semanas < 13) {
-        trimestre = "Você está no primeiro trimestre da gestação.";
-    } else if (semanas < 27) {
-        trimestre = "Você está no segundo trimestre da gestação.";
-    } else {
-        trimestre = "Você está no terceiro trimestre da gestação.";
-    }
+        function salvarEAtualizar() {
+            const dados = {
+                metodo: document.getElementById("metodoCalculo").value,
+                dum: document.getElementById("dumInput").value,
+                semanasUS: document.getElementById("semanasUS").value,
+                dataUS: document.getElementById("dataUS").value
+            };
+            localStorage.setItem("maternis_dados_gestacao", JSON.stringify(dados));
+            calcularGestacao();
+        }
 
-    document.getElementById("semanaTexto").innerText = `Semana ${semanas}` + (dias > 0 ? ` + ${dias} dias` : "");
-    document.getElementById("trimestreTexto").innerText = trimestre;
-    document.getElementById("semanasContador").innerText = `${semanas} de 40 semanas`;
-    document.getElementById("barraProgresso").style.width = `${porcentagem}%`;
-}
-
-function salvarEAtualizar() {
-    const dados = {
-        metodo: document.getElementById("metodoCalculo").value,
-        dum: document.getElementById("dumInput").value,
-        semanasUS: document.getElementById("semanasUS").value,
-        dataUS: document.getElementById("dataUS").value
-    };
-    localStorage.setItem("maternis_dados_gestacao", JSON.stringify(dados));
-    calcularGestacao();
-}
-
-window.onload = function () {
-    const salvos = JSON.parse(localStorage.getItem("maternis_dados_gestacao"));
-    if (salvos) {
-        document.getElementById("metodoCalculo").value = salvos.metodo || "dum";
-        document.getElementById("dumInput").value = salvos.dum || "";
-        document.getElementById("semanasUS").value = salvos.semanasUS || "";
-        document.getElementById("dataUS").value = salvos.dataUS || "";
-        alternarCampos();
-    }
-};
-</script>
-    
+        window.onload = function () {
+            const salvos = JSON.parse(localStorage.getItem("maternis_dados_gestacao"));
+            if (salvos) {
+                document.getElementById("metodoCalculo").value = salvos.metodo || "dum";
+                document.getElementById("dumInput").value = salvos.dum || "";
+                document.getElementById("semanasUS").value = salvos.semanasUS || "";
+                document.getElementById("dataUS").value = salvos.dataUS || "";
+                alternarCampos();
+            }
+        };
+    </script>
 
 </body>
 
